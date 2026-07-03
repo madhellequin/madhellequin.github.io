@@ -1,0 +1,37 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import type { Lang } from '../../../i18n/utils';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const stories = await getCollection('stories');
+  return stories.map((story) => {
+    const [lang, ...rest] = story.id.split('/');
+    return {
+      params: { lang, slug: rest.join('/') },
+      props: { story },
+    };
+  });
+}
+
+interface Props {
+  story: CollectionEntry<'stories'>;
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const { story } = Astro.props;
+const { Content } = await render(story);
+---
+
+<Layout lang={lang} title={story.data.title} description={story.data.description}>
+  <article>
+    <h1>{story.data.title}</h1>
+    <p>
+      <time datetime={story.data.pubDate.toISOString()}>
+        {story.data.pubDate.toLocaleDateString(lang)}
+      </time>
+    </p>
+    {story.data.image && <img src={story.data.image} alt="" />}
+    <Content />
+  </article>
+</Layout>

@@ -1,0 +1,102 @@
+---
+import { languages, useTranslations, type Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description?: string;
+  // Explicit per-locale links for the language switcher, used on detail pages
+  // where the translated entry has a different slug. Falls back to swapping
+  // the locale segment of the current URL.
+  switcherLinks?: Partial<Record<Lang, string>>;
+}
+
+const { lang, title, description = '', switcherLinks } = Astro.props;
+const t = useTranslations(lang);
+const currentPath = Astro.url.pathname;
+const restOfPath = currentPath.replace(/^\/(ru|uk|en)/, '') || '/';
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="site-nav">
+        <a href={`/${lang}/`}>{t('nav.home')}</a>
+        <a href={`/${lang}/blog/`}>{t('nav.blog')}</a>
+        <a href={`/${lang}/stories/`}>{t('nav.stories')}</a>
+        <a href={`/${lang}/about/`}>{t('nav.about')}</a>
+      </nav>
+      <div class="lang-switcher">
+        {Object.entries(languages).map(([code, label]) => (
+          <a
+            href={switcherLinks?.[code as Lang] ?? `/${code}${restOfPath}`}
+            aria-current={code === lang ? 'page' : undefined}
+          >
+            {label}
+          </a>
+        ))}
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>&copy; {new Date().getFullYear()} madhellequin</p>
+    </footer>
+    <style>
+      body {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 1rem;
+        font-family: system-ui, sans-serif;
+        line-height: 1.6;
+      }
+      .site-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+      .site-nav a {
+        margin-right: 1rem;
+      }
+      .lang-switcher a {
+        margin-left: 0.5rem;
+        opacity: 0.6;
+        text-decoration: none;
+      }
+      .lang-switcher a[aria-current='page'] {
+        opacity: 1;
+        font-weight: bold;
+      }
+      .site-footer {
+        margin-top: 3rem;
+        opacity: 0.6;
+        font-size: 0.9rem;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      table th,
+      table td {
+        border: 1px solid #ccc;
+        padding: 0.4rem 0.6rem;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+    </style>
+  </body>
+</html>

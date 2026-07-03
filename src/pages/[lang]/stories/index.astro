@@ -1,0 +1,34 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { useTranslations, type Lang } from '../../../i18n/utils';
+import { getCollection } from 'astro:content';
+
+export function getStaticPaths() {
+  return (['ru', 'uk', 'en'] as const).map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+const stories = (await getCollection('stories', ({ data }) => data.lang === lang && !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<Layout lang={lang} title={t('nav.stories')}>
+  <h1>{t('nav.stories')}</h1>
+  {stories.length === 0 && <p>{t('stories.empty')}</p>}
+  <ul>
+    {
+      stories.map((story) => {
+        const slug = story.id.split('/').slice(1).join('/');
+        return (
+          <li>
+            <a href={`/${lang}/stories/${slug}/`}>{story.data.title}</a>
+            <p>{story.data.description}</p>
+          </li>
+        );
+      })
+    }
+  </ul>
+</Layout>

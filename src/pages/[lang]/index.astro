@@ -1,0 +1,35 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { useTranslations, type Lang } from '../../i18n/utils';
+import { getCollection } from 'astro:content';
+
+export function getStaticPaths() {
+  return (['ru', 'uk', 'en'] as const).map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = useTranslations(lang);
+
+const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+const latest = posts.slice(0, 5);
+---
+
+<Layout lang={lang} title="madhellequin">
+  <h1>madhellequin</h1>
+  <h2>{t('nav.blog')}</h2>
+  {latest.length === 0 && <p>{t('blog.empty')}</p>}
+  <ul>
+    {
+      latest.map((post) => {
+        const slug = post.id.split('/').slice(1).join('/');
+        return (
+          <li>
+            <a href={`/${lang}/blog/${slug}/`}>{post.data.title}</a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</Layout>
