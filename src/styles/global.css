@@ -60,6 +60,15 @@ time {
   color: var(--text-muted);
 }
 
+.genre {
+  margin: 0.3rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-secondary);
+}
+
 main ul {
   list-style: none;
   margin: 0;

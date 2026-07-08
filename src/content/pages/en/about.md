@@ -3,6 +3,4 @@ title: 'About'
 lang: 'en'
 ---
 
-This is where you introduce yourself: who you are, what you write about, why this site exists.
-
-Fill in this section with your own text.
+I'm a Ukrainian writer, working in various genres, writing articles on topics that interest me. Concise? I suppose.

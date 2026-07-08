@@ -20,7 +20,9 @@ const blog = defineCollection({
 
 const stories = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/stories' }),
-  schema: publishedSchema,
+  schema: publishedSchema.extend({
+    genre: z.string(),
+  }),
 });
 
 const pages = defineCollection({

@@ -30,6 +30,7 @@ const t = useTranslations(lang);
 <Layout lang={lang} title={story.data.title} description={story.data.description}>
   <article>
     <h1>{story.data.title}</h1>
+    <p class="genre">{story.data.genre}</p>
     <p>
       <time datetime={story.data.pubDate.toISOString()}>
         {story.data.pubDate.toLocaleDateString(contentLang)}
