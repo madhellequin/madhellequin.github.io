@@ -1,5 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { resolveContentLang, type Lang } from '../i18n/utils';
+import { resolveContentLang, allLangs, type Lang } from '../i18n/utils';
 
 type TranslatableCollection = 'blog' | 'stories';
 
@@ -28,6 +28,12 @@ export async function getSlugGroups<C extends TranslatableCollection>(
     }
     group.availableLangs.push(lang as Lang);
     group.entries.set(lang as Lang, entry);
+  }
+
+  // Order pills consistently with the site language switcher (uk, en, ru),
+  // regardless of the filesystem glob order the entries were discovered in.
+  for (const group of bySlug.values()) {
+    group.availableLangs.sort((a, b) => allLangs.indexOf(a) - allLangs.indexOf(b));
   }
 
   return [...bySlug.values()];
