@@ -1,34 +1,44 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { useTranslations, type Lang } from '../../../i18n/utils';
-import { getCollection } from 'astro:content';
+import { languages, useTranslations, allLangs, type Lang } from '../../../i18n/utils';
+import { getSlugGroups, resolveGroupEntry } from '../../../lib/posts';
 
 export function getStaticPaths() {
-  return (['ru', 'uk', 'en'] as const).map((lang) => ({ params: { lang } }));
+  return allLangs.map((lang) => ({ params: { lang } }));
 }
 
 const { lang } = Astro.params as { lang: Lang };
 const t = useTranslations(lang);
 
-const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft)).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const groups = await getSlugGroups('blog');
+const resolved = groups
+  .map((group) => ({ group, ...resolveGroupEntry(group, lang) }))
+  .sort((a, b) => b.entry.data.pubDate.valueOf() - a.entry.data.pubDate.valueOf());
 ---
 
 <Layout lang={lang} title={t('nav.blog')}>
   <h1>{t('nav.blog')}</h1>
-  {posts.length === 0 && <p>{t('blog.empty')}</p>}
+  {resolved.length === 0 && <p>{t('blog.empty')}</p>}
   <ul>
     {
-      posts.map((post) => {
-        const slug = post.id.split('/').slice(1).join('/');
-        return (
-          <li>
-            <a href={`/${lang}/blog/${slug}/`}>{post.data.title}</a>
-            <p>{post.data.description}</p>
-          </li>
-        );
-      })
+      resolved.map(({ group, contentLang, entry }) => (
+        <li>
+          <a href={`/${lang}/blog/${group.slug}/${contentLang}/`}>{entry.data.title}</a>
+          <p>{entry.data.description}</p>
+          {group.availableLangs.length > 1 && (
+            <div class="content-langs">
+              <span>{t('content.readIn')}:</span>
+              {group.availableLangs.map((l) =>
+                l === contentLang ? (
+                  <span class="current">{languages[l]}</span>
+                ) : (
+                  <a href={`/${lang}/blog/${group.slug}/${l}/`}>{languages[l]}</a>
+                ),
+              )}
+            </div>
+          )}
+        </li>
+      ))
     }
   </ul>
 </Layout>

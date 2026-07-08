@@ -97,6 +97,37 @@ main ul li p {
   font-size: 0.95rem;
 }
 
+.content-langs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.6rem 0 1.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.content-langs a,
+.content-langs .current {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  text-decoration: none;
+  color: var(--text-muted);
+}
+
+.content-langs a:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.content-langs .current {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 table {
   border-collapse: collapse;
   width: 100%;

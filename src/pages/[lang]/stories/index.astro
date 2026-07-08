@@ -1,34 +1,44 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { useTranslations, type Lang } from '../../../i18n/utils';
-import { getCollection } from 'astro:content';
+import { languages, useTranslations, allLangs, type Lang } from '../../../i18n/utils';
+import { getSlugGroups, resolveGroupEntry } from '../../../lib/posts';
 
 export function getStaticPaths() {
-  return (['ru', 'uk', 'en'] as const).map((lang) => ({ params: { lang } }));
+  return allLangs.map((lang) => ({ params: { lang } }));
 }
 
 const { lang } = Astro.params as { lang: Lang };
 const t = useTranslations(lang);
 
-const stories = (await getCollection('stories', ({ data }) => data.lang === lang && !data.draft)).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const groups = await getSlugGroups('stories');
+const resolved = groups
+  .map((group) => ({ group, ...resolveGroupEntry(group, lang) }))
+  .sort((a, b) => b.entry.data.pubDate.valueOf() - a.entry.data.pubDate.valueOf());
 ---
 
 <Layout lang={lang} title={t('nav.stories')}>
   <h1>{t('nav.stories')}</h1>
-  {stories.length === 0 && <p>{t('stories.empty')}</p>}
+  {resolved.length === 0 && <p>{t('stories.empty')}</p>}
   <ul>
     {
-      stories.map((story) => {
-        const slug = story.id.split('/').slice(1).join('/');
-        return (
-          <li>
-            <a href={`/${lang}/stories/${slug}/`}>{story.data.title}</a>
-            <p>{story.data.description}</p>
-          </li>
-        );
-      })
+      resolved.map(({ group, contentLang, entry }) => (
+        <li>
+          <a href={`/${lang}/stories/${group.slug}/${contentLang}/`}>{entry.data.title}</a>
+          <p>{entry.data.description}</p>
+          {group.availableLangs.length > 1 && (
+            <div class="content-langs">
+              <span>{t('content.readIn')}:</span>
+              {group.availableLangs.map((l) =>
+                l === contentLang ? (
+                  <span class="current">{languages[l]}</span>
+                ) : (
+                  <a href={`/${lang}/stories/${group.slug}/${l}/`}>{languages[l]}</a>
+                ),
+              )}
+            </div>
+          )}
+        </li>
+      ))
     }
   </ul>
 </Layout>

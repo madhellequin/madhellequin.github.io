@@ -1,19 +1,20 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { useTranslations, type Lang } from '../../i18n/utils';
-import { getCollection } from 'astro:content';
+import { useTranslations, allLangs, type Lang } from '../../i18n/utils';
+import { getSlugGroups, resolveGroupEntry } from '../../lib/posts';
 
 export function getStaticPaths() {
-  return (['ru', 'uk', 'en'] as const).map((lang) => ({ params: { lang } }));
+  return allLangs.map((lang) => ({ params: { lang } }));
 }
 
 const { lang } = Astro.params as { lang: Lang };
 const t = useTranslations(lang);
 
-const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft)).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
-const latest = posts.slice(0, 5);
+const groups = await getSlugGroups('blog');
+const latest = groups
+  .map((group) => ({ group, ...resolveGroupEntry(group, lang) }))
+  .sort((a, b) => b.entry.data.pubDate.valueOf() - a.entry.data.pubDate.valueOf())
+  .slice(0, 5);
 ---
 
 <Layout lang={lang} title="madhellequin">
@@ -22,14 +23,11 @@ const latest = posts.slice(0, 5);
   {latest.length === 0 && <p>{t('blog.empty')}</p>}
   <ul>
     {
-      latest.map((post) => {
-        const slug = post.id.split('/').slice(1).join('/');
-        return (
-          <li>
-            <a href={`/${lang}/blog/${slug}/`}>{post.data.title}</a>
-          </li>
-        );
-      })
+      latest.map(({ group, contentLang, entry }) => (
+        <li>
+          <a href={`/${lang}/blog/${group.slug}/${contentLang}/`}>{entry.data.title}</a>
+        </li>
+      ))
     }
   </ul>
 </Layout>

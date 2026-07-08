@@ -24,4 +24,15 @@ export function getLocalizedPath(lang: Lang, path: string): string {
 
 export const LANG_STORAGE_KEY = 'preferredLang';
 
+export const allLangs = Object.keys(languages) as Lang[];
+
+// Picks which translation to show by default when a reader's site
+// language has no translation of a given post/story: their own
+// language, then Ukrainian, then whatever exists.
+export function resolveContentLang(siteLang: Lang, availableLangs: Lang[]): Lang {
+  if (availableLangs.includes(siteLang)) return siteLang;
+  if (availableLangs.includes('uk')) return 'uk';
+  return availableLangs[0];
+}
+
 export { languages, defaultLang };

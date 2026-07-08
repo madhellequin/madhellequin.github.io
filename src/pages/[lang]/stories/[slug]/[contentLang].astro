@@ -1,0 +1,55 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+import { languages, useTranslations, allLangs, type Lang } from '../../../../i18n/utils';
+import { getSlugGroups } from '../../../../lib/posts';
+import { render, type CollectionEntry } from 'astro:content';
+
+export async function getStaticPaths() {
+  const groups = await getSlugGroups('stories');
+  return groups.flatMap((group) =>
+    allLangs.flatMap((siteLang) =>
+      group.availableLangs.map((contentLang) => ({
+        params: { lang: siteLang, slug: group.slug, contentLang },
+        props: { story: group.entries.get(contentLang)!, availableLangs: group.availableLangs },
+      })),
+    ),
+  );
+}
+
+interface Props {
+  story: CollectionEntry<'stories'>;
+  availableLangs: Lang[];
+}
+
+const { lang, slug, contentLang } = Astro.params as { lang: Lang; slug: string; contentLang: Lang };
+const { story, availableLangs } = Astro.props;
+const { Content } = await render(story);
+const t = useTranslations(lang);
+---
+
+<Layout lang={lang} title={story.data.title} description={story.data.description}>
+  <article>
+    <h1>{story.data.title}</h1>
+    <p>
+      <time datetime={story.data.pubDate.toISOString()}>
+        {story.data.pubDate.toLocaleDateString(contentLang)}
+      </time>
+    </p>
+    {
+      availableLangs.length > 1 && (
+        <div class="content-langs">
+          <span>{t('content.readIn')}:</span>
+          {availableLangs.map((l) =>
+            l === contentLang ? (
+              <span class="current">{languages[l]}</span>
+            ) : (
+              <a href={`/${lang}/stories/${slug}/${l}/`}>{languages[l]}</a>
+            ),
+          )}
+        </div>
+      )
+    }
+    {story.data.image && <img src={story.data.image} alt="" />}
+    <Content />
+  </article>
+</Layout>

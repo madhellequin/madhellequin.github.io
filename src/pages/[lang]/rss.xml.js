@@ -1,35 +1,31 @@
 import rss from '@astrojs/rss';
-import { getCollection } from 'astro:content';
+import { allLangs } from '../../i18n/utils';
+import { getSlugGroups, resolveGroupEntry } from '../../lib/posts';
 
 export function getStaticPaths() {
-  return ['ru', 'uk', 'en'].map((lang) => ({ params: { lang } }));
+  return allLangs.map((lang) => ({ params: { lang } }));
 }
-
-const siteNames = { ru: 'madhellequin', uk: 'madhellequin', en: 'madhellequin' };
 
 export async function GET(context) {
   const { lang } = context.params;
 
-  const posts = await getCollection('blog', ({ data }) => data.lang === lang && !data.draft);
-  const stories = await getCollection('stories', ({ data }) => data.lang === lang && !data.draft);
+  const blogGroups = await getSlugGroups('blog');
+  const storyGroups = await getSlugGroups('stories');
 
   const items = [
-    ...posts.map((post) => ({ entry: post, section: 'blog' })),
-    ...stories.map((story) => ({ entry: story, section: 'stories' })),
+    ...blogGroups.map((group) => ({ group, section: 'blog', ...resolveGroupEntry(group, lang) })),
+    ...storyGroups.map((group) => ({ group, section: 'stories', ...resolveGroupEntry(group, lang) })),
   ].sort((a, b) => b.entry.data.pubDate.valueOf() - a.entry.data.pubDate.valueOf());
 
   return rss({
-    title: siteNames[lang],
+    title: 'madhellequin',
     description: 'Blog and stories feed',
     site: context.site,
-    items: items.map(({ entry, section }) => {
-      const slug = entry.id.split('/').slice(1).join('/');
-      return {
-        title: entry.data.title,
-        description: entry.data.description,
-        pubDate: entry.data.pubDate,
-        link: `/${lang}/${section}/${slug}/`,
-      };
-    }),
+    items: items.map(({ group, section, contentLang, entry }) => ({
+      title: entry.data.title,
+      description: entry.data.description,
+      pubDate: entry.data.pubDate,
+      link: `/${lang}/${section}/${group.slug}/${contentLang}/`,
+    })),
   });
 }
