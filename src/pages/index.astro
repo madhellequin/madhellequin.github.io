@@ -1,4 +1,67 @@
 ---
-import { defaultLang } from '../i18n/utils';
-return Astro.redirect(`/${defaultLang}/`);
+import '../styles/global.css';
+import { languages, defaultLang, LANG_STORAGE_KEY } from '../i18n/utils';
 ---
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>madhellequin</title>
+    <script is:inline define:vars={{ storageKey: LANG_STORAGE_KEY }}>
+      var saved = localStorage.getItem(storageKey);
+      if (saved) {
+        location.replace('/' + saved + '/');
+      }
+    </script>
+    <noscript>
+      <meta http-equiv="refresh" content={`0; url=/${defaultLang}/`} />
+    </noscript>
+  </head>
+  <body>
+    <main class="lang-gate">
+      <h1>madhellequin</h1>
+      <p class="prompt">Choose your language &middot; Выберите язык &middot; Оберіть мову</p>
+      <div class="lang-options">
+        {
+          Object.entries(languages).map(([code, label]) => (
+            <a href={`/${code}/`}>{label}</a>
+          ))
+        }
+      </div>
+    </main>
+    <style>
+      .lang-gate {
+        min-height: calc(100vh - 2rem);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 1.5rem;
+      }
+      .prompt {
+        color: var(--text-muted);
+      }
+      .lang-options {
+        display: flex;
+        gap: 0.75rem;
+      }
+      .lang-options a {
+        font-family: var(--font-mono);
+        padding: 0.5rem 1.25rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        text-decoration: none;
+        color: var(--text);
+      }
+      .lang-options a:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        text-decoration: none;
+      }
+    </style>
+  </body>
+</html>

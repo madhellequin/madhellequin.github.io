@@ -22,4 +22,6 @@ export function getLocalizedPath(lang: Lang, path: string): string {
   return `/${lang}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+export const LANG_STORAGE_KEY = 'preferredLang';
+
 export { languages, defaultLang };
