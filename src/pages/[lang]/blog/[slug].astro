@@ -5,25 +5,42 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
+
+  // Group by the language-less slug so each page knows which other
+  // locales actually have a translation of this same post.
+  const langsBySlug = new Map<string, Lang[]>();
+  for (const post of posts) {
+    const [lang, ...rest] = post.id.split('/');
+    const slug = rest.join('/');
+    langsBySlug.set(slug, [...(langsBySlug.get(slug) ?? []), lang as Lang]);
+  }
+
   return posts.map((post) => {
     const [lang, ...rest] = post.id.split('/');
+    const slug = rest.join('/');
     return {
-      params: { lang, slug: rest.join('/') },
-      props: { post },
+      params: { lang, slug },
+      props: { post, availableLangs: langsBySlug.get(slug) ?? [lang as Lang] },
     };
   });
 }
 
 interface Props {
   post: CollectionEntry<'blog'>;
+  availableLangs: Lang[];
 }
 
 const { lang } = Astro.params as { lang: Lang };
-const { post } = Astro.props;
+const { post, availableLangs } = Astro.props;
 const { Content } = await render(post);
 ---
 
-<Layout lang={lang} title={post.data.title} description={post.data.description}>
+<Layout
+  lang={lang}
+  title={post.data.title}
+  description={post.data.description}
+  availableLangs={availableLangs}
+>
   <article>
     <h1>{post.data.title}</h1>
     <p>

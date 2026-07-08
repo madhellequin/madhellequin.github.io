@@ -6,13 +6,14 @@ interface Props {
   lang: Lang;
   title: string;
   description?: string;
-  // Explicit per-locale links for the language switcher, used on detail pages
-  // where the translated entry has a different slug. Falls back to swapping
-  // the locale segment of the current URL.
-  switcherLinks?: Partial<Record<Lang, string>>;
+  // Languages this exact page has a translation for. Omit when the page
+  // exists in all locales (listing pages, about); pass it on post/story
+  // detail pages, where a translation may not exist yet, so the switcher
+  // can disable the missing ones instead of linking to a 404.
+  availableLangs?: Lang[];
 }
 
-const { lang, title, description = '', switcherLinks } = Astro.props;
+const { lang, title, description = '', availableLangs } = Astro.props;
 const t = useTranslations(lang);
 const currentPath = Astro.url.pathname;
 const restOfPath = currentPath.replace(/^\/(ru|uk|en)/, '') || '/';
@@ -37,14 +38,17 @@ const restOfPath = currentPath.replace(/^\/(ru|uk|en)/, '') || '/';
         <a href={`/${lang}/about/`}>{t('nav.about')}</a>
       </nav>
       <div class="lang-switcher">
-        {Object.entries(languages).map(([code, label]) => (
-          <a
-            href={switcherLinks?.[code as Lang] ?? `/${code}${restOfPath}`}
-            aria-current={code === lang ? 'page' : undefined}
-          >
-            {label}
-          </a>
-        ))}
+        {Object.entries(languages).map(([code, label]) =>
+          !availableLangs || availableLangs.includes(code as Lang) ? (
+            <a href={`/${code}${restOfPath}`} aria-current={code === lang ? 'page' : undefined}>
+              {label}
+            </a>
+          ) : (
+            <span class="lang-disabled" title={t('lang.notTranslated')}>
+              {label}
+            </span>
+          ),
+        )}
       </div>
     </header>
     <main>
@@ -117,6 +121,16 @@ const restOfPath = currentPath.replace(/^\/(ru|uk|en)/, '') || '/';
         color: var(--accent);
         border-color: var(--accent);
         box-shadow: 0 0 8px var(--glow);
+      }
+      .lang-switcher .lang-disabled {
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        padding: 0.2rem 0.55rem;
+        border: 1px dashed var(--border);
+        border-radius: 3px;
+        color: var(--text-muted);
+        opacity: 0.4;
+        cursor: not-allowed;
       }
       .site-footer {
         margin-top: 4rem;

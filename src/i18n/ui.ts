@@ -15,6 +15,7 @@ export const ui = {
     'blog.readMore': 'Читать дальше',
     'blog.empty': 'Пока нет постов.',
     'stories.empty': 'Пока нет рассказов.',
+    'lang.notTranslated': 'Пока недоступно на этом языке',
   },
   uk: {
     'nav.home': 'Головна',
@@ -24,6 +25,7 @@ export const ui = {
     'blog.readMore': 'Читати далі',
     'blog.empty': 'Поки що немає постів.',
     'stories.empty': 'Поки що немає оповідань.',
+    'lang.notTranslated': 'Поки що недоступно цією мовою',
   },
   en: {
     'nav.home': 'Home',
@@ -33,5 +35,6 @@ export const ui = {
     'blog.readMore': 'Read more',
     'blog.empty': 'No posts yet.',
     'stories.empty': 'No stories yet.',
+    'lang.notTranslated': 'Not available in this language yet',
   },
 } as const;
