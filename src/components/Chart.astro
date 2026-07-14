@@ -1,0 +1,157 @@
+---
+// Build-time SVG chart. Renders bar / line / pie from a data array.
+// Output is static SVG (zero client JS); colours come from CSS variables
+// defined in global.css so charts follow the site theme automatically.
+//
+// Usage (inside an .mdx article):
+//   import Chart from '../../../components/Chart.astro';
+//   <Chart type="bar" title="..." data={[{ label: 'Q1', value: 42 }, ...]} />
+
+interface Datum {
+  label: string;
+  value: number;
+}
+
+interface Props {
+  type?: 'bar' | 'line' | 'pie';
+  title?: string;
+  /** Optional unit appended to value labels, e.g. "%" or " ₽". */
+  unit?: string;
+  data: Datum[];
+}
+
+const { type = 'bar', title, unit = '', data } = Astro.props as Props;
+
+// Guard against empty input so the build never crashes on a malformed article.
+const rows = Array.isArray(data) ? data.filter((d) => d && typeof d.value === 'number') : [];
+
+// Fixed drawing surface; the <svg> scales responsively via viewBox + width:100%.
+const W = 720;
+const H = 400;
+
+// Palette cycles through the theme accent hues (defined in global.css).
+const palette = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)'];
+const colorAt = (i: number) => palette[i % palette.length];
+
+// Compact number formatting for axis and value labels.
+const fmt = (n: number) => {
+  const rounded = Math.round(n * 100) / 100;
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(2)}${unit}`;
+};
+
+// ---- Bar / line share a cartesian layout ----
+const m = { top: 28, right: 20, bottom: 48, left: 52 };
+const iw = W - m.left - m.right;
+const ih = H - m.top - m.bottom;
+const maxValue = Math.max(...rows.map((d) => d.value), 0) || 1;
+
+// Bar geometry.
+const bandWidth = rows.length ? iw / rows.length : iw;
+const barWidth = bandWidth * 0.6;
+const bars = rows.map((d, i) => {
+  const h = (d.value / maxValue) * ih;
+  return {
+    x: m.left + i * bandWidth + (bandWidth - barWidth) / 2,
+    y: m.top + ih - h,
+    w: barWidth,
+    h,
+    cx: m.left + i * bandWidth + bandWidth / 2,
+    ...d,
+  };
+});
+
+// Line geometry.
+const linePoints = rows.map((d, i) => {
+  const x = rows.length > 1 ? m.left + (i * iw) / (rows.length - 1) : m.left + iw / 2;
+  const y = m.top + ih - (d.value / maxValue) * ih;
+  return { x, y, ...d };
+});
+const linePath = linePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+// Horizontal gridlines at 0 / 50 / 100 % of max.
+const gridLines = [0, 0.5, 1].map((f) => ({
+  y: m.top + ih - f * ih,
+  value: maxValue * f,
+}));
+
+// ---- Pie geometry ----
+const total = rows.reduce((s, d) => s + d.value, 0) || 1;
+const pcx = 190;
+const pcy = H / 2;
+const pr = 150;
+const polar = (angle: number) => [pcx + pr * Math.cos(angle), pcy + pr * Math.sin(angle)];
+let acc = -Math.PI / 2; // start at 12 o'clock
+const slices = rows.map((d, i) => {
+  const frac = d.value / total;
+  const start = acc;
+  const end = acc + frac * Math.PI * 2;
+  acc = end;
+  const [x1, y1] = polar(start);
+  const [x2, y2] = polar(end);
+  const largeArc = end - start > Math.PI ? 1 : 0;
+  const path = `M ${pcx} ${pcy} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${pr} ${pr} 0 ${largeArc} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z`;
+  return { path, color: colorAt(i), pct: Math.round(frac * 100), ...d };
+});
+---
+
+<figure class="chart">
+  {title && <figcaption>{title}</figcaption>}
+
+  {
+    rows.length === 0 ? (
+      <p class="chart-empty">Нет данных для графика.</p>
+    ) : type === 'pie' ? (
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={title ?? 'Круговая диаграмма'}>
+        {slices.map((s) => <path d={s.path} fill={s.color} stroke="var(--bg)" stroke-width="2" />)}
+        {slices.map((s, i) => (
+          <g transform={`translate(400, ${m.top + i * 34})`}>
+            <rect width="16" height="16" rx="3" fill={s.color} />
+            <text x="26" y="13" class="chart-legend">
+              {s.label} — {fmt(s.value)} ({s.pct}%)
+            </text>
+          </g>
+        ))}
+      </svg>
+    ) : (
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={title ?? 'График'}>
+        {gridLines.map((g) => (
+          <>
+            <line x1={m.left} y1={g.y} x2={W - m.right} y2={g.y} class="chart-grid" />
+            <text x={m.left - 8} y={g.y + 4} text-anchor="end" class="chart-axis">
+              {fmt(g.value)}
+            </text>
+          </>
+        ))}
+
+        {type === 'bar'
+          ? bars.map((b, i) => (
+              <>
+                <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="3" fill={colorAt(i)} />
+                <text x={b.cx} y={b.y - 8} text-anchor="middle" class="chart-value">
+                  {fmt(b.value)}
+                </text>
+              </>
+            ))
+          : (
+            <>
+              <path d={linePath} fill="none" stroke="var(--chart-1)" stroke-width="2.5" />
+              {linePoints.map((p) => (
+                <>
+                  <circle cx={p.x} cy={p.y} r="4" fill="var(--chart-1)" stroke="var(--bg)" stroke-width="2" />
+                  <text x={p.x} y={p.y - 12} text-anchor="middle" class="chart-value">
+                    {fmt(p.value)}
+                  </text>
+                </>
+              ))}
+            </>
+          )}
+
+        {(type === 'bar' ? bars : linePoints).map((p) => (
+          <text x={p.cx ?? p.x} y={H - m.bottom + 22} text-anchor="middle" class="chart-axis">
+            {p.label}
+          </text>
+        ))}
+      </svg>
+    )
+  }
+</figure>
