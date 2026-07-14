@@ -223,3 +223,29 @@ img {
   font-style: italic;
   margin: 0;
 }
+
+/* Legend for multi-series bar/line charts (rendered as HTML below the SVG).
+   Uses div/span, not ul/li, to avoid the main ul card styling above. */
+.chart-legend-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 1.1rem;
+  margin: 0.6rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.chart-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
