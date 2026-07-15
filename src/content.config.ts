@@ -14,19 +14,19 @@ const publishedSchema = z.object({
 });
 
 const blog = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
+  loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
   schema: publishedSchema,
 });
 
 const stories = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/stories' }),
+  loader: glob({ pattern: '**/*.md', base: './src/content/stories' }),
   schema: publishedSchema.extend({
     genre: z.string(),
   }),
 });
 
 const pages = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/pages' }),
+  loader: glob({ pattern: '**/*.md', base: './src/content/pages' }),
   schema: z.object({
     title: z.string(),
     lang: z.enum(['ru', 'uk', 'en']),
