@@ -3,28 +3,13 @@
 // Output is static SVG (zero client JS); colours come from CSS variables
 // defined in global.css so charts follow the site theme automatically.
 //
-// Single series (bar / line / pie):
+// Usage (inside an .mdx article):
+//   import Chart from '../../../components/Chart.astro';
 //   <Chart type="bar" title="..." data={[{ label: 'Q1', value: 42 }, ...]} />
-//
-// Multiple series (bar → grouped, line → multi-line; not applicable to pie):
-//   <Chart
-//     type="bar"
-//     title="..."
-//     categories={['Q1', 'Q2', 'Q3']}
-//     series={[
-//       { name: 'План', values: [40, 55, 60] },
-//       { name: 'Факт', values: [42, 51, 68] },
-//     ]}
-//   />
 
 interface Datum {
   label: string;
   value: number;
-}
-
-interface Series {
-  name: string;
-  values: number[];
 }
 
 interface Props {
@@ -32,32 +17,13 @@ interface Props {
   title?: string;
   /** Optional unit appended to value labels, e.g. "%" or " ₽". */
   unit?: string;
-  /** Single-series shorthand. */
-  data?: Datum[];
-  /** Multi-series: x-axis labels shared by every series. */
-  categories?: string[];
-  /** Multi-series: one entry per series. */
-  series?: Series[];
+  data: Datum[];
 }
 
-const { type = 'bar', title, unit = '', data, categories, series } = Astro.props as Props;
+const { type = 'bar', title, unit = '', data } = Astro.props as Props;
 
-// Normalise both input shapes into { categories, series }.
-// Multi-series input wins; otherwise fall back to the single-series `data` prop.
-let cats: string[] = [];
-let allSeries: Series[] = [];
-if (Array.isArray(series) && series.length > 0 && Array.isArray(categories)) {
-  cats = categories;
-  allSeries = series.filter((s) => s && Array.isArray(s.values));
-} else if (Array.isArray(data)) {
-  const rows = data.filter((d) => d && typeof d.value === 'number');
-  cats = rows.map((d) => d.label);
-  allSeries = [{ name: '', values: rows.map((d) => d.value) }];
-}
-
-const nSeries = allSeries.length;
-const multi = nSeries > 1;
-const empty = cats.length === 0 || nSeries === 0;
+// Guard against empty input so the build never crashes on a malformed article.
+const rows = Array.isArray(data) ? data.filter((d) => d && typeof d.value === 'number') : [];
 
 // Fixed drawing surface; the <svg> scales responsively via viewBox + width:100%.
 const W = 720;
@@ -77,42 +43,30 @@ const fmt = (n: number) => {
 const m = { top: 28, right: 20, bottom: 48, left: 52 };
 const iw = W - m.left - m.right;
 const ih = H - m.top - m.bottom;
-const maxValue = Math.max(...allSeries.flatMap((s) => s.values), 0) || 1;
+const maxValue = Math.max(...rows.map((d) => d.value), 0) || 1;
 
-const bandWidth = cats.length ? iw / cats.length : iw;
-const bandCenter = (i: number) => m.left + i * bandWidth + bandWidth / 2;
-
-// Bar geometry: one band per category, grouped sub-bars per series.
-const groupWidth = bandWidth * (multi ? 0.8 : 0.6);
-const slotWidth = groupWidth / nSeries;
-const barGap = multi ? slotWidth * 0.15 : 0;
-const barsBySeries = allSeries.map((s, si) =>
-  cats.map((_, i) => {
-    const v = s.values[i] ?? 0;
-    const h = (v / maxValue) * ih;
-    const x = m.left + i * bandWidth + (bandWidth - groupWidth) / 2 + si * slotWidth + barGap / 2;
-    const w = slotWidth - barGap;
-    return { x, y: m.top + ih - h, w, h, v, cx: x + w / 2 };
-  }),
-);
-
-// Line geometry: one polyline per series.
-const xFor = (i: number) => (cats.length > 1 ? m.left + (i * iw) / (cats.length - 1) : m.left + iw / 2);
-const linesBySeries = allSeries.map((s) => {
-  const pts = cats.map((_, i) => {
-    const v = s.values[i] ?? 0;
-    return { x: xFor(i), y: m.top + ih - (v / maxValue) * ih, v };
-  });
-  const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-  return { pts, path };
+// Bar geometry.
+const bandWidth = rows.length ? iw / rows.length : iw;
+const barWidth = bandWidth * 0.6;
+const bars = rows.map((d, i) => {
+  const h = (d.value / maxValue) * ih;
+  return {
+    x: m.left + i * bandWidth + (bandWidth - barWidth) / 2,
+    y: m.top + ih - h,
+    w: barWidth,
+    h,
+    cx: m.left + i * bandWidth + bandWidth / 2,
+    ...d,
+  };
 });
 
-// Per-point value labels only for a single series — grouped/multi charts would
-// overlap; there the gridlines + legend carry the reading.
-const showValues = !multi;
-
-// Category labels along the x-axis. Bars centre on the band; lines on the point.
-const catLabelX = (i: number) => (type === 'line' ? xFor(i) : bandCenter(i));
+// Line geometry.
+const linePoints = rows.map((d, i) => {
+  const x = rows.length > 1 ? m.left + (i * iw) / (rows.length - 1) : m.left + iw / 2;
+  const y = m.top + ih - (d.value / maxValue) * ih;
+  return { x, y, ...d };
+});
+const linePath = linePoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
 
 // Horizontal gridlines at 0 / 50 / 100 % of max.
 const gridLines = [0, 0.5, 1].map((f) => ({
@@ -120,17 +74,15 @@ const gridLines = [0, 0.5, 1].map((f) => ({
   value: maxValue * f,
 }));
 
-// ---- Pie geometry (single series only; uses the first series) ----
-const pieValues = allSeries[0]?.values ?? [];
-const total = pieValues.reduce((s, v) => s + v, 0) || 1;
+// ---- Pie geometry ----
+const total = rows.reduce((s, d) => s + d.value, 0) || 1;
 const pcx = 190;
 const pcy = H / 2;
 const pr = 150;
 const polar = (angle: number) => [pcx + pr * Math.cos(angle), pcy + pr * Math.sin(angle)];
 let acc = -Math.PI / 2; // start at 12 o'clock
-const slices = cats.map((label, i) => {
-  const value = pieValues[i] ?? 0;
-  const frac = value / total;
+const slices = rows.map((d, i) => {
+  const frac = d.value / total;
   const start = acc;
   const end = acc + frac * Math.PI * 2;
   acc = end;
@@ -138,7 +90,7 @@ const slices = cats.map((label, i) => {
   const [x2, y2] = polar(end);
   const largeArc = end - start > Math.PI ? 1 : 0;
   const path = `M ${pcx} ${pcy} L ${x1.toFixed(1)} ${y1.toFixed(1)} A ${pr} ${pr} 0 ${largeArc} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z`;
-  return { path, color: colorAt(i), pct: Math.round(frac * 100), label, value };
+  return { path, color: colorAt(i), pct: Math.round(frac * 100), ...d };
 });
 ---
 
@@ -146,7 +98,7 @@ const slices = cats.map((label, i) => {
   {title && <figcaption>{title}</figcaption>}
 
   {
-    empty ? (
+    rows.length === 0 ? (
       <p class="chart-empty">Нет данных для графика.</p>
     ) : type === 'pie' ? (
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={title ?? 'Круговая диаграмма'}>
@@ -172,53 +124,34 @@ const slices = cats.map((label, i) => {
         ))}
 
         {type === 'bar'
-          ? barsBySeries.map((bars, si) =>
-              bars.map((b, ci) => (
-                <>
-                  <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="3" fill={multi ? colorAt(si) : colorAt(ci)} />
-                  {showValues && (
-                    <text x={b.cx} y={b.y - 8} text-anchor="middle" class="chart-value">
-                      {fmt(b.v)}
-                    </text>
-                  )}
-                </>
-              )),
-            )
-          : linesBySeries.map((ln, si) => (
+          ? bars.map((b, i) => (
               <>
-                <path d={ln.path} fill="none" stroke={colorAt(si)} stroke-width="2.5" />
-                {ln.pts.map((p) => (
-                  <>
-                    <circle cx={p.x} cy={p.y} r="4" fill={colorAt(si)} stroke="var(--bg)" stroke-width="2" />
-                    {showValues && (
-                      <text x={p.x} y={p.y - 12} text-anchor="middle" class="chart-value">
-                        {fmt(p.v)}
-                      </text>
-                    )}
-                  </>
-                ))}
+                <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="3" fill={colorAt(i)} />
+                <text x={b.cx} y={b.y - 8} text-anchor="middle" class="chart-value">
+                  {fmt(b.value)}
+                </text>
               </>
-            ))}
+            ))
+          : (
+            <>
+              <path d={linePath} fill="none" stroke="var(--chart-1)" stroke-width="2.5" />
+              {linePoints.map((p) => (
+                <>
+                  <circle cx={p.x} cy={p.y} r="4" fill="var(--chart-1)" stroke="var(--bg)" stroke-width="2" />
+                  <text x={p.x} y={p.y - 12} text-anchor="middle" class="chart-value">
+                    {fmt(p.value)}
+                  </text>
+                </>
+              ))}
+            </>
+          )}
 
-        {cats.map((label, i) => (
-          <text x={catLabelX(i)} y={H - m.bottom + 22} text-anchor="middle" class="chart-axis">
-            {label}
+        {(type === 'bar' ? bars : linePoints).map((p) => (
+          <text x={p.cx ?? p.x} y={H - m.bottom + 22} text-anchor="middle" class="chart-axis">
+            {p.label}
           </text>
         ))}
       </svg>
-    )
-  }
-
-  {
-    !empty && type !== 'pie' && multi && (
-      <div class="chart-legend-list">
-        {allSeries.map((s, i) => (
-          <span class="chart-legend-item">
-            <span class="chart-swatch" style={`background:${colorAt(i)}`} />
-            {s.name}
-          </span>
-        ))}
-      </div>
     )
   }
 </figure>
