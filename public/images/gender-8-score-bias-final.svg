@@ -1,0 +1,42 @@
+<svg viewBox="0 0 760 430" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Крен по баллам в финале (− Ж / + М)">
+<rect x="0" y="0" width="760" height="430" rx="6" fill="#10182b"/>
+<text x="380.0" y="30" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="17" fill="#3ee6d8">Крен по баллам в финале (− Ж / + М)</text>
+<line x1="60" y1="364.0" x2="736" y2="364.0" stroke="#223055" stroke-width="1"/>
+<text x="52" y="368.0" text-anchor="end" font-family="'Consolas','Courier New',monospace" font-size="11" fill="#7c8aa8">-14</text>
+<line x1="60" y1="287.5" x2="736" y2="287.5" stroke="#223055" stroke-width="1"/>
+<text x="52" y="291.5" text-anchor="end" font-family="'Consolas','Courier New',monospace" font-size="11" fill="#7c8aa8">-8</text>
+<line x1="60" y1="211.0" x2="736" y2="211.0" stroke="#223055" stroke-width="1"/>
+<text x="52" y="215.0" text-anchor="end" font-family="'Consolas','Courier New',monospace" font-size="11" fill="#7c8aa8">-1</text>
+<line x1="60" y1="134.5" x2="736" y2="134.5" stroke="#223055" stroke-width="1"/>
+<text x="52" y="138.5" text-anchor="end" font-family="'Consolas','Courier New',monospace" font-size="11" fill="#7c8aa8">+5</text>
+<line x1="60" y1="58.0" x2="736" y2="58.0" stroke="#223055" stroke-width="1"/>
+<text x="52" y="62.0" text-anchor="end" font-family="'Consolas','Courier New',monospace" font-size="11" fill="#7c8aa8">+11</text>
+<line x1="60" y1="194.8" x2="736" y2="194.8" stroke="#7c8aa8" stroke-width="1.5"/>
+<path d="M 60.0 342.9 L 116.3 115.1 L 172.7 330.8 L 229.0 245.9 L 285.3 149.6 L 341.7 207.6 L 398.0 330.4 L 454.3 221.7 L 510.7 231.1 L 567.0 246.6 L 623.3 183.7 L 679.7 79.1 L 736.0 180.2" fill="none" stroke="#3ee6d8" stroke-width="2.5"/>
+<circle cx="60.0" cy="342.9" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="116.3" cy="115.1" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="172.7" cy="330.8" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="229.0" cy="245.9" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="285.3" cy="149.6" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="341.7" cy="207.6" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="398.0" cy="330.4" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="454.3" cy="221.7" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="510.7" cy="231.1" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="567.0" cy="246.6" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="623.3" cy="183.7" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="679.7" cy="79.1" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<circle cx="736.0" cy="180.2" r="3.5" fill="#3ee6d8" stroke="#10182b" stroke-width="1.5"/>
+<text x="60.0" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">f2025</text>
+<text x="116.3" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">s2025</text>
+<text x="172.7" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">f2024</text>
+<text x="229.0" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">s2024</text>
+<text x="285.3" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">f2023</text>
+<text x="341.7" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">s2023</text>
+<text x="398.0" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">f2022</text>
+<text x="454.3" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">s2022</text>
+<text x="510.7" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">f2021</text>
+<text x="567.0" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">s2021</text>
+<text x="623.3" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">f2020</text>
+<text x="679.7" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">s2020</text>
+<text x="736.0" y="384" text-anchor="middle" font-family="'Consolas','Courier New',monospace" font-size="10" fill="#7c8aa8">f2019</text>
+</svg>
